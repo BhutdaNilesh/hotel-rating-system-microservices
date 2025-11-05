@@ -1,5 +1,7 @@
 package com.nb.user.service.services.impl;
 
+import com.nb.user.service.entities.Hotel;
+import com.nb.user.service.entities.Rating;
 import com.nb.user.service.entities.User;
 import com.nb.user.service.exceptions.ResourceNotFoundException;
 import com.nb.user.service.repositories.UserRepository;
@@ -8,9 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -45,8 +48,21 @@ public class UserServiceImpl implements UserService {
         // fetch the ratings data from RATING_SERVICE using restTempate
         //localhost:8083/ratings/users/7effbc94-5b8c-4a90-a966-f39cbc27068b
 
-        ArrayList ratingsByUser = restTemplate.getForObject("http://localhost:8083/ratings/users/" + user.getUserID(), ArrayList.class);
-        user.setRatings(ratingsByUser);
+        Rating[] ratingsByUser = restTemplate.getForObject("http://localhost:8083/ratings/users/" + user.getUserID(), Rating[].class);
+
+        List<Rating> ratingList = Arrays.stream(ratingsByUser).toList();
+        List<Rating> ratings = ratingList.stream().map(rating -> {
+            // api call to Hotel Service to get the Hotel
+            // http://localhost:8082/hotels/dea5de24-f018-4e8d-b0ba-a9235bcd86b2
+            Hotel hotel = restTemplate.getForObject("http://localhost:8082/hotels/" + rating.getHotelId(), Hotel.class);
+            // set the Hotel Details to Rating
+            rating.setHotel(hotel);
+            // return the rating
+
+            return rating;
+        }).collect(Collectors.toList());
+
+        user.setRatings(ratings);
         return user;
     }
 }
