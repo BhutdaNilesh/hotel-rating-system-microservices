@@ -4,6 +4,7 @@ import com.nb.user.service.entities.Hotel;
 import com.nb.user.service.entities.Rating;
 import com.nb.user.service.entities.User;
 import com.nb.user.service.exceptions.ResourceNotFoundException;
+import com.nb.user.service.external.services.HotelService;
 import com.nb.user.service.repositories.UserRepository;
 import com.nb.user.service.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private HotelService hotelService;
 
 //    private Logger logger = (Logger) LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -54,7 +58,8 @@ public class UserServiceImpl implements UserService {
         List<Rating> ratings = ratingList.stream().map(rating -> {
             // api call to Hotel Service to get the Hotel
             // http://localhost:8082/hotels/dea5de24-f018-4e8d-b0ba-a9235bcd86b2
-            Hotel hotel = restTemplate.getForObject("http://HOTEL-SERVICE/hotels/" + rating.getHotelId(), Hotel.class);
+            // Hotel hotel = restTemplate.getForObject("http://HOTEL-SERVICE/hotels/" + rating.getHotelId(), Hotel.class);
+            Hotel hotel = hotelService.getHotel(rating.getHotelId());
             // set the Hotel Details to Rating
             rating.setHotel(hotel);
             // return the rating
